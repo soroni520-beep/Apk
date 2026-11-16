@@ -1,0 +1,74 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidOrder(data) {
+      return data.userId is string && data.userId.size() >= 1 && data.userId.size() <= 128 &&
+        data.orderCode is string && data.orderCode.size() >= 3 && data.orderCode.size() <= 32 &&
+        data.categoryId in ['uid', 'monthly', 'weekly'] &&
+        data.packageTitleEn is string && data.packageTitleEn.size() >= 1 && data.packageTitleEn.size() <= 100 &&
+        data.packageTitleBn is string && data.packageTitleBn.size() >= 1 && data.packageTitleBn.size() <= 100 &&
+        data.priceBdt is int && data.priceBdt > 0 && data.priceBdt <= 500000 &&
+        data.playerUid is string && data.playerUid.size() >= 5 && data.playerUid.size() <= 20 &&
+        data.playerName is string && data.playerName.size() >= 1 && data.playerName.size() <= 40 &&
+        data.customerEmail is string && data.customerEmail.size() >= 3 && data.customerEmail.size() <= 120 &&
+        data.serverRegion is string && data.serverRegion.size() >= 2 && data.serverRegion.size() <= 12 &&
+        data.paymentMethodId in ['bkash', 'nagad', 'rocket'] &&
+        data.senderNumber is string && data.senderNumber.size() >= 7 && data.senderNumber.size() <= 20 &&
+        data.trxId is string && data.trxId.size() >= 4 && data.trxId.size() <= 32 &&
+        data.statusId in ['pending', 'delivered', 'cancelled'] &&
+        data.createdAt is timestamp && data.createdAt <= request.time &&
+        (!('updatedAt' in data) || (data.updatedAt is timestamp && data.updatedAt <= request.time));
+    }
+
+    match /users/{userId}/orders/{orderId} {
+      allow get, list: if isSignedIn() && request.auth.uid == userId;
+
+      allow create: if isSignedIn() &&
+        request.auth.uid == userId &&
+        isValidId(orderId) &&
+        incoming().keys().hasAll([
+          'userId', 'orderCode', 'categoryId', 'packageTitleEn', 'packageTitleBn',
+          'priceBdt', 'playerUid', 'playerName', 'customerEmail', 'serverRegion',
+          'paymentMethodId', 'senderNumber', 'trxId', 'statusId', 'createdAt'
+        ]) &&
+        incoming().keys().hasOnly([
+          'userId', 'orderCode', 'categoryId', 'packageTitleEn', 'packageTitleBn',
+          'priceBdt', 'playerUid', 'playerName', 'customerEmail', 'serverRegion',
+          'paymentMethodId', 'senderNumber', 'trxId', 'statusId', 'createdAt', 'updatedAt'
+        ]) &&
+        incoming().userId == request.auth.uid &&
+        isValidOrder(incoming());
+
+      allow update: if isSignedIn() &&
+        request.auth.uid == userId &&
+        isValidId(orderId) &&
+        isValidOrder(incoming()) &&
+        incoming().userId == existing().userId &&
+        incoming().createdAt == existing().createdAt &&
+        existing().statusId == 'pending' &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['statusId', 'updatedAt']);
+
+      allow delete: if false;
+    }
+  }
+}

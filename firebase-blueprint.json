@@ -1,0 +1,93 @@
+{
+  "entities": {
+    "CloudOrder": {
+      "title": "CloudOrder",
+      "description": "User top-up order record synced to Firestore after Google Sign-In.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Authenticated Firebase UID"
+        },
+        "orderCode": {
+          "type": "string",
+          "description": "Human-readable order code (e.g. JD-1042)"
+        },
+        "categoryId": {
+          "type": "string",
+          "enum": ["uid", "monthly", "weekly"]
+        },
+        "packageTitleEn": {
+          "type": "string"
+        },
+        "packageTitleBn": {
+          "type": "string"
+        },
+        "priceBdt": {
+          "type": "integer"
+        },
+        "playerUid": {
+          "type": "string"
+        },
+        "playerName": {
+          "type": "string"
+        },
+        "customerEmail": {
+          "type": "string"
+        },
+        "serverRegion": {
+          "type": "string"
+        },
+        "paymentMethodId": {
+          "type": "string",
+          "enum": ["bkash", "nagad", "rocket"]
+        },
+        "senderNumber": {
+          "type": "string"
+        },
+        "trxId": {
+          "type": "string"
+        },
+        "statusId": {
+          "type": "string",
+          "enum": ["pending", "delivered", "cancelled"]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Must be written with FieldValue.serverTimestamp()"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Must be written with FieldValue.serverTimestamp()"
+        }
+      },
+      "required": [
+        "userId",
+        "orderCode",
+        "categoryId",
+        "packageTitleEn",
+        "packageTitleBn",
+        "priceBdt",
+        "playerUid",
+        "playerName",
+        "customerEmail",
+        "serverRegion",
+        "paymentMethodId",
+        "senderNumber",
+        "trxId",
+        "statusId",
+        "createdAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/users/{userId}/orders/{orderId}": {
+      "schema": {
+        "$ref": "#/entities/CloudOrder"
+      },
+      "description": "Per-user top-up orders owned strictly by the authenticated Google user."
+    }
+  }
+}

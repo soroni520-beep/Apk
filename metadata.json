@@ -1,0 +1,6 @@
+{
+  "name": "Master JD Top Up",
+  "description": "MASTER JD TOP UP — Free Fire diamond and membership top-up storefront with UID Top Up, Monthly Top Up, Weekly Top Up, bilingual Bengali & English guides, and order management.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
